@@ -1,0 +1,89 @@
+plugins {
+    id 'java'
+    id "io.freefair.lombok" version "5.1.0"
+    id 'org.springframework.boot' version '2.3.3.RELEASE'
+    id 'jacoco'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.3.0.RELEASE'
+    implementation 'javax.persistence:javax.persistence-api:2.2'
+    implementation 'org.projectlombok:lombok:1.18.12'
+    implementation 'org.apache.commons:commons-math3:3.5'
+    implementation 'com.h2database:h2:1.4.200'
+    implementation 'org.jdbi:jdbi3-core:3.14.1'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.3.0.RELEASE'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.1'
+}
+
+group = 'edu.depail.se433'
+version = '0.0.1-SNAPSHOT'
+description = 'shopping-app'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+def user = 'NNGUYE51'
+
+bootJar {
+    mainClassName = 'edu.depaul.se433.shoppingapp.ShoppingAppApplication'
+}
+
+test {
+    ignoreFailures(true)
+    useJUnitPlatform ()
+
+    afterTest { desc, result ->
+        logger.quiet "Executing test ${desc.name} [${desc.className}] with result: ${result.resultType}"
+    }
+
+    finalizedBy jacocoTestReport
+}
+
+task packageDistribution(type: Zip) {
+    dependsOn test
+    archiveFileName = "${user}-${rootProject.name}.zip"
+    destinationDirectory = file("$buildDir/dist")
+
+    from("$projectDir") {
+        include "src/**/*"
+        include "build.gradle"
+        include "gradlew"
+        include "gradlew.bat"
+        include "settings.gradle"
+    }
+
+    into("${user}-${rootProject.name}")
+}
+
+check {
+    finalizedBy packageDistribution
+    dependsOn {
+        jacocoTestCoverageVerification
+    }
+}
+
+jacocoTestReport {
+    dependsOn test
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.3
+            }
+        }
+    }
+}
+
+
+
+

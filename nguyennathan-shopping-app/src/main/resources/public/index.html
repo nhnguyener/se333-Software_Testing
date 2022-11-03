@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
+    <title>Online Shopping</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col">
+          <h2>Customer details</h2>
+        </div>
+      </div>
+      <div class="form-group row">
+        <label for="name" class="col-sm-2 col-form-label">Customer name</label>
+        <div class="col-sm-10">
+          <input type="text" id="customer-name" class="form-control">
+        </div>
+      </div>
+      <div class="form-group row">
+        <label for="name" class="col-sm-2 col-form-label">Destination State</label>
+        <div class="col-sm-10">
+          <input type="text" id="state" class="form-control">
+        </div>
+      </div>
+      <div class="form-group row">
+        <label for="name" class="col-sm-2 col-form-label">Shipping option</label>
+        <div class="col-sm-10">
+          <select id="shipping" class="form-control shipping">
+            <option> -- select an option --</option>
+            <option>STANDARD</option>
+            <option>NEXT_DAY</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+        <h2>Add items to cart</h2>
+        </div>
+      </div>
+      <form action="#">
+        <div class="form-group row">
+          <label for="name" class="col-sm-2 col-form-label">Name of product</label>
+          <div class="col-sm-10">
+          <input type="text" id="name" class="form-control">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="unit_price" class="col-sm-2 col-form-label">Unit price</label>
+          <div class="col-sm-10">
+          <input type="text" id="unit_price" class="form-control">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="quantity" class="col-sm-2 col-form-label">Quantity</label>
+          <div class="col-sm-10">
+          <input type="text" id="quantity" class="form-control">
+          </div>
+        </div>
+        <div class="form-group row col-sm-12 btn-toolbar">
+        <input id="add-item-btn" type="submit" value="Add item" class="btn btn-primary" onclick="postToCart()">
+        <input id="get-price-btn" type="submit" value="Current total" class="btn btn-success mx-2" onclick="getPrice()">
+        <input id="checkout-btn" type="submit" value="Checkout" class="btn btn-success" onclick="checkout()">
+        </div>
+      </form>
+      <div class="row">
+        <div class="col-sm-2">Status:</div>
+        <div class="col-sm-6" id="result"></div>
+        <div class="col-sm-2">Average Purchase:</div>
+        <div class="col-sm-2" id="avg"></div>
+      </div>
+
+    </div> <!-- container -->
+  </body>
+<script>
+  var config = {
+    headers: {
+      'Content-Type' : 'application/json'
+    }
+  }
+  var resultMsg = document.getElementById("result");
+  var avgMsg = document.getElementById("avg");
+
+  function postToCart() {
+    var data = {
+      name: document.getElementById("name").value,
+      unitPrice: parseFloat(document.getElementById("unit_price").value),
+      quantity: parseInt(document.getElementById("quantity").value)
+    }
+
+    axios.post('/shoppingapp/items', data, config)
+    .then(function (response) {
+      resultMsg.innerHTML=response.data.replace('"','')
+    })
+    .catch(function (error) {
+      resultMsg.innerHTML=error;
+    });
+    return false;
+  }
+
+  function getPrice() {
+    var state = document.getElementById("state").value;
+    var shipping = document.getElementById("shipping").value;
+    axios.get('/shoppingapp/totalprice?state=' + state + '&shipping=' + shipping, config)
+    .then(function (response) {
+      var msg = "total: " + response.data.total;
+      resultMsg.innerHTML = msg;
+    })
+    .catch(function (error) {
+      resultMsg.innerHTML=error;
+    });
+
+    return false;
+  }
+
+  function checkout() {
+    var state = document.getElementById("state").value;
+    var shipping = document.getElementById("shipping").value;
+    var custName = document.getElementById("customer-name").value;
+    axios.get('/shoppingapp/checkout?state=' + state + '&shipping=' + shipping + '&customer-name=' + custName, config)
+    .then(function (response) {
+      resultMsg.innerHTML = response.data;
+    })
+    .catch(function (error) {
+      resultMsg.innerHTML=error;
+    });
+
+
+    axios.get('/shoppingapp/average?name=' + custName)
+    .then(function (response) {
+       avgMsg.innerHTML = response.data.toFixed(2);
+    })
+    .catch(function (error) {
+      avgMsg.innerHTML=error;
+    });
+    return false;
+  }
+</script>
+</html>
